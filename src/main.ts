@@ -3,6 +3,7 @@ const Stats = require('stats-js');
 import * as DAT from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
+import Cube from './geometry/Cube';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import {setGL} from './globals';
@@ -12,18 +13,28 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
   tesselations: 5,
+  color: [ 255,0,0 ],
   'Load Scene': loadScene, // A function pointer, essentially
 };
 
 let icosphere: Icosphere;
 let square: Square;
+let cube: Cube;
+let objArray: Array<Cube> = new Array(10000);
 let prevTesselations: number = 5;
+let myTime: number = 0;
 
 function loadScene() {
   icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
   icosphere.create();
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
+  cube = new Cube(vec3.fromValues(0, 0, 0));
+  cube.create();
+  for (let x = 0; x < 10000; x += 1) {
+	  objArray[x] = new Cube(vec3.fromValues(0, 0, 0));
+	  objArray[x].create();
+	}
 }
 
 function main() {
@@ -38,6 +49,7 @@ function main() {
   // Add controls to the gui
   const gui = new DAT.GUI();
   gui.add(controls, 'tesselations', 0, 8).step(1);
+  gui.addColor(controls, 'color');
   gui.add(controls, 'Load Scene');
 
   // get canvas and webgl context
@@ -70,20 +82,19 @@ function main() {
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
+	let color = vec3.fromValues(controls.color[0] / 255.0, controls.color[1] / 255.0, controls.color[2] / 255.0);
     if(controls.tesselations != prevTesselations)
     {
       prevTesselations = controls.tesselations;
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    renderer.render(camera, lambert, [
-      icosphere,
-      // square,
-    ]);
+    renderer.render(camera, lambert, objArray, color, myTime);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
     requestAnimationFrame(tick);
+	myTime = myTime + 1;
   }
 
   window.addEventListener('resize', function() {

@@ -10,27 +10,40 @@
 // can compute what color to apply to its pixel based on things like vertex
 // position, light position, and vertex color.
 precision highp float;
+precision highp int;
 
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
+uniform int u_Time;
 
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
+in vec4 fs_Pos;
 in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
 
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
+				  
+float noiseFunction3(vec3 input_vals) {
+	return fract(sin(dot(input_vals, vec3(1340.11f, 1593.46f, 942.25f))) * 38945.13f);
+}
+
+
+		
 
 void main()
 {
-    // Material base color (before shading)
-        vec4 diffuseColor = u_Color;
+	float myTime = float(u_Time) / 50.0f;
 
+    // Material base color (before shading)
+		//float noise_Pos = vec3(1,1,1);
+		//vec3 noise_Pos_vec3 = vec3(noise_Pos, noise_Pos, noise_Pos);
+        vec4 diffuseColor = vec4(u_Color.xyz, 1.0f);
+		//vec4 diffuseColor = vec4(u_Color.xyz, 1.0f);
+		
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
-        // Avoid negative lighting values
-        // diffuseTerm = clamp(diffuseTerm, 0, 1);
 
         float ambientTerm = 0.2;
 
