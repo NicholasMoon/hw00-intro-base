@@ -8,6 +8,8 @@ This project is a procedural terrain generator that creates infinite amounts of 
 a number of parameters settable by the user. The terrain is rendered using a 100x100 cube grid. It uses
 Fractal Brownian Motion to determine things like color, terrain height, and other factors.
 
+I plan to implement other noise functions, like worley and perlin, to generate fun terrain, but didn't have the time yet.
+
 ![](images/proj_gif.gif)
 
 ![](images/cap0.PNG)
