@@ -164,6 +164,9 @@ void main()
 	else if (newYVal < 8.0) {
 		diffuseColor = vec4(1,1,1,0) * noise_Pos_fs + noise_Col;
 	}
+	else {
+		diffuseColor = vec4(0.94, 0.45, 0.11 ,0) * noise_Pos_fs + noise_Col;
+	}
 		
 		
 	// GGX shading (borrowed from my 561 implementation)
