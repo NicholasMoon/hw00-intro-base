@@ -1,5 +1,20 @@
 # HW 0: Intro to Javascript and WebGL
 
+## Procedural Terrain Generator and Explorer
+
+
+This project is a procedural terrain generator that creates infinite amounts of new terrain based on
+a number of parameters settable by the user. The terrain is rendered using a 100x100 cube grid. It uses
+Fractal Brownian Motion to determine things like color, terrain height, and other factors.
+
+![](images/proj_gif.gif)
+
+![](images/cap0.PNG)
+
+![](images/cap1.PNG)
+
+![](images/cap2.PNG)
+
 <p align="center">
   <img width="360" height="360" src="https://user-images.githubusercontent.com/1758825/132532354-e3a45402-e484-499e-bfa7-2d73b9f2c946.png">
 </p>
