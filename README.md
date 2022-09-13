@@ -2,6 +2,7 @@
 
 ## Procedural Terrain Generator and Explorer
 
+PLAY AROUND WITH IT AT [THIS](https://nicholasmoon.github.io/hw00-intro-base/) SITE :O
 
 This project is a procedural terrain generator that creates infinite amounts of new terrain based on
 a number of parameters settable by the user. The terrain is rendered using a 100x100 cube grid. It uses
