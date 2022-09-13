@@ -23,6 +23,17 @@ uniform mat4 u_ViewProj;    // The matrix that defines the camera's transformati
 			
 uniform int u_Time;
 
+uniform vec4 u_CubePos;
+
+uniform float u_Freq;
+uniform float u_NoiseFreq;
+uniform float u_NoiseAmp;
+uniform float u_NoisePersistence;
+uniform int   u_NoiseOctaves;
+
+uniform vec4 u_LightPos;
+
+
 in vec4 vs_Pos;             // The array of vertex positions passed to the shader
 
 in vec4 vs_Nor;             // The array of vertex normals passed to the shader
@@ -34,20 +45,62 @@ out vec4 fs_Nor;            // The array of normals that has been transformed by
 out vec4 fs_LightVec;       // The direction in which our virtual light lies, relative to each vertex. This is implicitly passed to the fragment shader.
 out vec4 fs_Col;            // The color of each vertex. This is implicitly passed to the fragment shader.
 
-const vec4 lightPos = vec4(5, 5, 3, 1); //The position of our virtual light, which is used to compute the shading of
-                                        //the geometry in the fragment shader.
 
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// 3D FBM implementation
 
-float random1(vec3 p) {
-    return fract(sin(dot(p,vec3(127.1, 311.7, 191.999)))
-                 *43758.5453);
+float random3D(vec3 input_vals) {
+	return fract(sin(dot(input_vals, vec3(1340.11f, 1593.46f, 942.25f))) * 38945.13f);
 }
 
+float interpolate3D_cubic(vec3 input_vals) {
+    vec3 input_fract = fract(input_vals);
+	vec3 input_floor = floor(input_vals);
+	
+	// generate the random values associated with the 8 points on our grid
+	float bottom_left_front = random3D(input_floor);
+	float bottom_left_back = random3D(input_floor + vec3(0,0,1));
+	float bottom_right_front = random3D(input_floor + vec3(1,0,0));
+	float bottom_right_back = random3D(input_floor + vec3(1,0,1));
+	float top_left_front = random3D(input_floor + vec3(0,1,0));
+	float top_left_back = random3D(input_floor + vec3(0,1,1));
+	float top_right_front = random3D(input_floor + vec3(1,1,0));
+	float top_right_back = random3D(input_floor + vec3(1,1,1));
 
+	float t_x = smoothstep(0.0, 1.0, input_fract.x);
+	float t_y = smoothstep(0.0, 1.0, input_fract.y);
+	float t_z = smoothstep(0.0, 1.0, input_fract.z);
+
+    float interpX_bottom_front = mix(bottom_left_front, bottom_right_front, t_x);
+    float interpX_bottom_back = mix(bottom_left_back, bottom_right_back, t_x);
+    float interpX_top_front = mix(top_left_front, top_right_front, t_x);
+    float interpX_top_back = mix(top_left_back, top_right_back, t_x);
+
+    float interpY_front = mix(interpX_bottom_front, interpX_top_front, t_y);
+    float interpY_bottom = mix(interpX_bottom_back, interpX_top_back, t_y);
+
+    return mix(interpY_front, interpY_bottom, t_z);
+}
+
+float fbm(vec3 p, float amp, float freq, float persistence, int octaves) {
+    float sum = 0.0;
+    for(int i = 0; i < octaves; ++i) {
+        sum += interpolate3D_cubic(p * freq) * amp;
+        amp *= persistence;
+        freq *= 2.0;
+    }
+    return sum;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
 void main()
 {
-	float myTime = float(u_Time) / 50.0f;
+	float amp = u_NoiseAmp;
+	float freq = u_NoiseFreq;
+	int octaves = u_NoiseOctaves;
+
+	float myTime = float(u_Time) / u_Freq;
 
     fs_Col = vs_Col;                         // Pass the vertex colors to the fragment shader for interpolation
 
@@ -67,13 +120,17 @@ void main()
 	
     vec4 modelposition = modelMat * vs_Pos;   // Temporarily store the transformed vertex positions for use below
 	
-	
-	//mat4 translMat = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
-	//mat4 scaleMat = mat4(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1);
-	//modelMat = modelMat * translMat;
-	//modelposition = modelMat * vs_Pos;
+	float newYVal = (fbm(vec3(u_CubePos.x + 0.1, u_CubePos.y, u_CubePos.z + 0.1) + vec3(myTime, 0.0,0.0), amp, freq, u_NoisePersistence, octaves) * 2.0) + 0.25;
 
-    fs_LightVec = lightPos - modelposition;  // Compute the direction in which the light source lies
+	newYVal = newYVal * newYVal * newYVal;
+
+	
+	mat4 translMat = mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, newYVal, 0, 1);
+	mat4 scaleMat = mat4(1, 0, 0, 0, 0, newYVal * 2.0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+	modelMat = modelMat * translMat * scaleMat;
+	modelposition = modelMat * vs_Pos;
+
+    fs_LightVec = u_LightPos - modelposition;  // Compute the direction in which the light source lies
 	
 	fs_Pos = modelposition;
 
